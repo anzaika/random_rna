@@ -1,0 +1,3 @@
+[submodule "data"]
+	path = data
+	url = git@bitbucket.org:anzaika/random_rna_data.git
