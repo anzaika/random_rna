@@ -17,10 +17,25 @@ RSpec.describe "Stop" do
   end
 
   describe "::avg_distance" do
-    it "returns 2 for stops [TAG,1],[TAA,3]" do
-      a = Stop.new("TAG", 1)
-      b = Stop.new("TAA", 3)
-      expect(Stop.avg_distance([a,b])).to eq(2)
+    context "with use_segments_distance=false" do
+      it "returns 2 for stops [TAG,1],[TAA,3]" do
+        a = Stop.new("TAG", 1)
+        b = Stop.new("TAA", 3)
+        expect(Stop.avg_distance([a,b], false)).to eq(2)
+      end
+    end
+    context "with use_segments_distance=true" do
+      it "returns 2 for stops [TAG,1],[TAA,3]" do
+        a = Stop.new("TAG", 1)
+        b = Stop.new("TAA", 3)
+        expect(Stop.avg_distance([a,b], true)).to eq(2)
+      end
+      it "returns 2 for stops [TAG,1],[TAA,3],[TAG,8]" do
+        a = Stop.new("TAG", 1)
+        b = Stop.new("TAA", 3)
+        c = Stop.new("TAG", 8)
+        expect(Stop.avg_distance([a,b,c], true)).to eq(3.5)
+      end
     end
   end
 end
