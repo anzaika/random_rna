@@ -11,7 +11,7 @@ class Stop
     Bio::Sequence::NA.new(codon).translate == "*"
   end
 
-  def self.avg_distance(codons, use_segments_distance = true)
+  def self.avg_distance(codons, use_segments_distance)
     if codons.count < 2
       nil
     elsif codons.count == 2

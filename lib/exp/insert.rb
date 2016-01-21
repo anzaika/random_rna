@@ -69,15 +69,32 @@ class Insert
   end
 
   def avg_dist_btwn_all_stops
-    frame && frame.stop_avg_distance
+    frame && frame.stop_avg_distance(nil, false)
+  end
+
+  def avg_seg_dist_btwn_all_stops
+    frame && frame.stop_avg_distance(nil, true)
   end
 
   def avg_dist_btwn_first_3_stops
-    frame && frame.stop_avg_distance(3)
+    frame && frame.stop_avg_distance(3, false)
+  end
+
+  def avg_seg_dist_btwn_first_3_stops
+    frame && frame.stop_avg_distance(3, true)
   end
 
   def length
     @insert.length
+  end
+
+  # Works only for inserts with 1-2 stops
+  def stop_cluster_position_bin
+    frame && frame.stop_cluster_position_bin
+  end
+
+  def first_stop_position
+    frame && frame.first_stop_position
   end
 
   private
