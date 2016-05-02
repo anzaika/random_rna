@@ -16,6 +16,10 @@ STANDARD = %i(
   amber_stop_pct
   avg_dist_btwn_all_stops
   avg_dist_btwn_first_3_stops
+  avg_seg_dist_btwn_all_stops
+  avg_seg_dist_btwn_first_3_stops
+  stop_cluster_position_bin
+  first_stop_position
   rep
 )
 

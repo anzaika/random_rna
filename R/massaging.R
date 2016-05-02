@@ -24,6 +24,20 @@ AddCorrectedExpression = function(total) {
   return(total)
 }
 
+AddNoStopLengthCorrectedExpression = function(total) {
+  gall = subset(total, rep == 'GALL')
+  wt   = subset(total, rep == 'WT')
+  upf = subset(total, rep == 'UPF')
+
+  gall.nostop = subset(gall, stop_count == 0)
+  wt.nostop   = subset(wt, stop_count == 0)
+  upf.nostop  = subset(upf, stop_count == 0)
+
+  gall.lm = lm(gall.nostop$expression ~ gall.nostop$length)
+  wt.lm = lm(wt.nostop$expression ~ wt.nostop$length)
+  upf.lm = lm(upf.nostop$expression ~ upf.nostop$length)
+}
+
 FilterByLength = function(total, min = 100, max = 250) {
   # Leave only inserts with length in the specific interval
   #

@@ -1,4 +1,5 @@
 library(gridExtra)
+# library(ggplot)
 
 BoxplotExprStopCount = function() {
   # Boxplot of length corrected expression vs. stop codon count
@@ -12,11 +13,32 @@ BoxplotExprStopCount = function() {
   limits = c(-10, 5)
   labels = labs(x = "Stop codon count", y = "Expression")
 
-  ggplot(total, aes(factor(stop_count), expression_corrected_len)) +
+  plot = ggplot(total, aes(factor(stop_count), expression_corrected_len)) +
     geom_boxplot(aes(fill=factor(rep)), notch = T) +
     scale_y_continuous(breaks = breaks, limits = limits) +
     ggtitle("With expression corrected by length") +
     labels
+  DrawPlotWithFootnote(plot)
+}
+
+BoxplotExprStopCount = function() {
+  # Boxplot of length corrected expression vs. stop codon count
+
+  total = AddCorrectedExpression(Data())
+  total = subset(total, stop_count < 11)
+
+  theme_set(theme_gray(base_size = 18))
+
+  breaks = c(-10,-7.5,-5,-4,-3,-2,-1,0,1,2,3,4,5)
+  limits = c(-10, 5)
+  labels = labs(x = "Stop codon count", y = "Expression")
+
+  plot = ggplot(total, aes(factor(stop_count), expression_corrected_len)) +
+    geom_boxplot(aes(fill=factor(rep)), notch = T) +
+    scale_y_continuous(breaks = breaks, limits = limits) +
+    ggtitle("With expression corrected by length") +
+    labels
+  DrawPlotWithFootnote(plot)
 }
 
 BoxplotExprStopTypeCount = function() {
@@ -31,11 +53,13 @@ BoxplotExprStopTypeCount = function() {
   limits = c(-5, 3)
   labels = labs(x = "Stop types count", y = "Expression")
 
-  ggplot(total, aes(factor(stop_types_count), expression_corrected_len)) +
+  plot =
+    ggplot(total, aes(factor(stop_types_count), expression_corrected_len)) +
     geom_boxplot(aes(fill=factor(rep)), notch = T) +
     scale_y_continuous(breaks = breaks, limits = limits) +
     ggtitle("With expression corrected by length") +
     labels
+  DrawPlotWithFootnote(plot)
 }
 
 TwoBoxplots = function () {
@@ -65,7 +89,8 @@ TwoBoxplots = function () {
     ggtitle("With uncorrected expression") +
     labels
 
-  multiplot(f1,f2, cols=2)
+  plot = multiplot(f1,f2, cols=2)
+  DrawPlotWithFootnote(plot)
 }
 
 four_boxplots = function () {
@@ -91,6 +116,7 @@ four_boxplots = function () {
   f4 = ggplot(total_250, aes(factor(stop_count), expression_corrected_len)) + geom_boxplot(aes(fill=factor(rep)), notch = T) + scale_y_continuous(breaks = breaks, limits = limits) + ggtitle("> 250 dna reads") + labels
 
   multiplot(f1,f2,f3,f4, cols=2)
+  DrawPlotWithFootnote(plot)
 }
 
 TwoScatterplots = function() {
@@ -133,36 +159,57 @@ TwoScatterplots = function() {
    annotation_custom(tableGrob(total.nostop.corr), xmin=-11, xmax=-7, ymin=35, ymax=50)
 
   multiplot(f1,f2, cols=2)
+  DrawPlotWithFootnote(plot)
 }
 
-ExpressionVsAvgStopDistanceOnlyTwoStops = function () {
-  total = AddCorrectedExpression(Data())
-  total = subset(total, length < 300 & stop_count == 2)
-  labels = labs(x = "Average distance between stop codons",
-                y = "Expression corrected by length (on the base of all inserts)")
+ExpressionVsAvgStopDistance =
+  function (upp_len = 400,
+            stops_count = 1,
+            stops_count_eql = F,
+            save = F,
+            points_transparency = 1,
+            use_segment_distance = T) {
 
-  ggplot(total ,aes(x=avg_dist_btwn_all_stops, y=expression_corrected_len, color=rep)) +
-  geom_point(shape=1) +
-  scale_colour_hue(l=60) +
-  geom_smooth(method=lm, fullrange=TRUE) +
-  labels +
-  ggtitle("Only inserts with 2 stops and length < 400")
-}
+    total = AddCorrectedExpression(Data())
+    if (stops_count_eql) {
+      total = subset(total, length < upp_len & stop_count == stops_count)
+    } else {
+      total = subset(total, length < upp_len & stop_count > stops_count)
+    }
 
-ExpressionVsAvgStopDistance = function () {
-  total = AddCorrectedExpression(Data())
-  total = subset(total, length < 300 & stop_count > 1)
-  labels = labs(x = "Average distance between all stop codons",
-                y = "Expression corrected by length")
+    labels = labs(x = "Average distance between stop codons",
+                  y = "Expression corrected by length (on the base of all inserts)")
+    title =
+      paste("Upper limit for insert length: ", upp_len, "bp", "; ",
+            "Stops_count: ", stops_count, "; ",
+            "Stops_count_eql: ", stops_count_eql, "; ",
+            "Use segment distance: ", use_segment_distance, "\n")
 
-  ggplot(total ,aes(x=avg_dist_btwn_all_stops, y=expression_corrected_len, color=rep)) +
-  geom_point(shape=1) +
-  scale_colour_hue(l=60) +
-  geom_smooth() +
-  labels
-  # ggtitle("With stops and length < 400") +
-  # scale_fill_discrete(name = "Biological\nreplica", breaks=c) +
-  # annotation_custom(tableGrob(total.stop.corr), xmin=-11, xmax=-6, ymin=35, ymax=50)
+    if (use_segment_distance) {
+      base_plot = ggplot(total,
+        aes(x=avg_seg_dist_btwn_all_stops, y=expression_corrected_len, color=rep))
+    } else {
+      base_plot = ggplot(total,
+        aes(x=avg_dist_btwn_all_stops, y=expression_corrected_len, color=rep))
+    }
+
+    breaks = c(-6,-5,-4,-3,-2,-1,1,2)
+    limits = c(-7, 3)
+
+    plot = base_plot +
+    geom_point(shape=1, alpha = points_transparency) +
+    scale_colour_hue(l=60) +
+    geom_smooth(fullrange=TRUE) +
+    labels +
+    ggtitle(title) +
+    scale_y_continuous(breaks = breaks, limits = limits) +
+    theme(plot.title =
+     element_text(
+      family = "Trebuchet MS", color="#666666", face="bold", size=7, hjust=0)) +
+    stat_summary(fun.y = "mean", fun.ymin = min, fun.ymax = max, size = 0.6, geom = 'line')
+    # stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median, geom = "crossbar", width = 0.5)
+
+    if (save) { DrawPlotWithFootnote(plot) } else { plot }
 }
 
 ExpressionVsAvgStopDistanceBtwFirstThreeStops = function () {
@@ -179,13 +226,13 @@ ExpressionVsAvgStopDistanceBtwFirstThreeStops = function () {
   # ggtitle("With stops and length < 400") +
   # scale_fill_discrete(name = "Biological\nreplica", breaks=c) +
   # annotation_custom(tableGrob(total.stop.corr), xmin=-11, xmax=-6, ymin=35, ymax=50)
+  # DrawPlotWithFootnote(plot)
 }
 
 
 ####################################
 ####### Stop codon density plots ###
 ####################################
-
 
 density_corr_to_expr_per_count = function() {
   total = add_corrected_expr(data())
@@ -197,8 +244,8 @@ density_corr_to_expr_per_count = function() {
 
   theme_set(theme_gray(base_size = 18))
 
-  breaks = c(-10,-5,0,5,10,15)
-  limits = c(-10, 15)
+  breaks = c(-8,-7,-6,-5,-4,-3,-2,-1,1,2,3)
+  limits = c(-8, 4)
   labels = labs(x = "Stop density", y = "Expression corrected by length")
 
   f1 = ggplot(gall ,aes(x=stop_density, y=expression_corrected_len, color=as.factor(stop_count))) + geom_point(shape=1) + scale_y_continuous(breaks = breaks, limits = limits) + scale_colour_hue(l=50) + geom_smooth(method=lm, se=FALSE, fullrange=TRUE) + ggtitle("GALL") + labels + scale_colour_discrete(name = 'Stop count')

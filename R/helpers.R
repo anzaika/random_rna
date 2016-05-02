@@ -1,5 +1,7 @@
 library(ggplot2)
 library(plyr)
+library(grid)
+library(gridExtra)
 
 # Multiple plot function
 #
@@ -49,4 +51,47 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 CorrelationBetweenLengthAndExpressionByRep = function(total) {
   return(data.frame(COR = cor(total$expression_corrected_len, total$length)))
+}
+
+SavePlot = function(plot) {
+  filename = paste("figs/", deparse(sys.calls()[[sys.nframe()-1]]), ".jpg")
+  filename = sub("\\(\\) ", "", filename)
+  ggsave(file=filename, plot=plot)
+}
+
+DrawPlotWithFootnote = function(plot, wide = F) {
+  filename = paste("figs/", deparse(sys.calls()[[sys.nframe()-1]]), ".jpg")
+  filename = sub("\\(\\) ", "", filename)
+
+  if (wide) { widt = 15 } else { widt = 10 }
+  # jpeg(filename = filename, width = widt, height = 10, units = "in", res = 400, quality = 75)
+  jpeg(filename = filename, width = 45, height = 25, units = "in", res = 180, quality = 70)
+
+  label = paste("Created with function: ",
+                deparse(sys.calls()[[sys.nframe()-1]]),
+                " on ",
+                format(Sys.time(), "%d %b %Y"))
+
+  footnote = textGrob(label, gp = gpar(fontsize = 12, col = "gray"))
+
+  # layout
+  vp.layout <- grid.layout(
+                 nrow = 2,
+                 ncol = 1,
+                 heights = unit(c(14, 1), "null"))
+
+  # init
+  grid.newpage()
+  pushViewport(viewport(layout=vp.layout, name="layout"))
+
+  # plot
+  pushViewport(viewport(layout.pos.row=1, layout.pos.col=1, name="plot"))
+  print(plot, newpage=FALSE)
+  upViewport()
+
+  # footnote
+  pushViewport(viewport(layout.pos.row=2, layout.pos.col=1, name="table"))
+  grid.draw(footnote)
+  upViewport()
+  dev.off()
 }
